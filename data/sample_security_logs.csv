@@ -5,3 +5,5 @@ timestamp,username,source_ip,event_type,status
 2026-10-23T09:03:00,alex,192.0.2.10,login,success
 2026-10-23T09:05:00,sam,192.0.2.20,login,failure
 2026-10-23T09:06:00,jordan,192.0.2.30,login,success
+2026-10-23T09:07:00,sam,192.0.2.20,login,failure
+2026-10-23T09:08:00,sam,192.0.2.20,login,success

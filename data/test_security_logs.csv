@@ -1,0 +1,4 @@
+timestamp,username,source_ip,event_type,status
+2026-10-26T10:00:00,rahul,192.0.2.50,login,failure
+2026-10-26T10:05:00,rahul,192.0.2.50,login,failure
+2026-10-26T10:08:00,rahul,192.0.2.50,login,success

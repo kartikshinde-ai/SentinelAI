@@ -1,0 +1,94 @@
+{
+    "report_title": "SentinelAI Security Alert Report",
+    "total_log_records": 8,
+    "total_alerts": 2,
+    "alerts": [
+        {
+            "username": "alex",
+            "failed_attempts": 3,
+            "first_failure": "2026-10-23T09:00:00",
+            "last_failure": "2026-10-23T09:02:00",
+            "successful_login": "2026-10-23T09:03:00",
+            "source_ip": "192.0.2.10",
+            "evidence": [
+                {
+                    "timestamp": "2026-10-23T09:00:00",
+                    "username": "alex",
+                    "source_ip": "192.0.2.10",
+                    "event_type": "login",
+                    "status": "failure"
+                },
+                {
+                    "timestamp": "2026-10-23T09:01:00",
+                    "username": "alex",
+                    "source_ip": "192.0.2.10",
+                    "event_type": "login",
+                    "status": "failure"
+                },
+                {
+                    "timestamp": "2026-10-23T09:02:00",
+                    "username": "alex",
+                    "source_ip": "192.0.2.10",
+                    "event_type": "login",
+                    "status": "failure"
+                },
+                {
+                    "timestamp": "2026-10-23T09:03:00",
+                    "username": "alex",
+                    "source_ip": "192.0.2.10",
+                    "event_type": "login",
+                    "status": "success"
+                }
+            ],
+            "severity": "Medium",
+            "finding": "3 failed login attempt(s) were followed by a successful login for user 'alex'.",
+            "investigation_steps": [
+                "Verify whether the successful login was expected by the user.",
+                "Review the source IP address and login time.",
+                "Check whether other accounts had similar failed login activity.",
+                "Confirm the finding with additional authorized log sources."
+            ],
+            "assessment_note": "This alert identifies a pattern for review. It does not confirm that an account was compromised."
+        },
+        {
+            "username": "sam",
+            "failed_attempts": 2,
+            "first_failure": "2026-10-23T09:05:00",
+            "last_failure": "2026-10-23T09:07:00",
+            "successful_login": "2026-10-23T09:08:00",
+            "source_ip": "192.0.2.20",
+            "evidence": [
+                {
+                    "timestamp": "2026-10-23T09:05:00",
+                    "username": "sam",
+                    "source_ip": "192.0.2.20",
+                    "event_type": "login",
+                    "status": "failure"
+                },
+                {
+                    "timestamp": "2026-10-23T09:07:00",
+                    "username": "sam",
+                    "source_ip": "192.0.2.20",
+                    "event_type": "login",
+                    "status": "failure"
+                },
+                {
+                    "timestamp": "2026-10-23T09:08:00",
+                    "username": "sam",
+                    "source_ip": "192.0.2.20",
+                    "event_type": "login",
+                    "status": "success"
+                }
+            ],
+            "severity": "Low",
+            "finding": "2 failed login attempt(s) were followed by a successful login for user 'sam'.",
+            "investigation_steps": [
+                "Verify whether the successful login was expected by the user.",
+                "Review the source IP address and login time.",
+                "Check whether other accounts had similar failed login activity.",
+                "Confirm the finding with additional authorized log sources."
+            ],
+            "assessment_note": "This alert identifies a pattern for review. It does not confirm that an account was compromised."
+        }
+    ]
+}

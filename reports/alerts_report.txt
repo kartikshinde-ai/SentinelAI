@@ -1,0 +1,55 @@
+SentinelAI Security Alert Report
+============================================================
+Total log records: 8
+Total alerts: 2
+
+ALERT #1
+------------------------------------------------------------
+Username: alex
+Severity: Medium
+Finding: 3 failed login attempt(s) were followed by a successful login for user 'alex'.
+Failed attempts: 3
+First failure: 2026-10-23T09:00:00
+Last failure: 2026-10-23T09:02:00
+Successful login: 2026-10-23T09:03:00
+Successful login source IP: 192.0.2.10
+
+Investigation steps:
+  1. Verify whether the successful login was expected by the user.
+  2. Review the source IP address and login time.
+  3. Check whether other accounts had similar failed login activity.
+  4. Confirm the finding with additional authorized log sources.
+
+Assessment note:
+  This alert identifies a pattern for review. It does not confirm that an account was compromised.
+
+Evidence:
+  Time: 2026-10-23T09:00:00 | User: alex | IP: 192.0.2.10 | Event: login | Status: failure
+  Time: 2026-10-23T09:01:00 | User: alex | IP: 192.0.2.10 | Event: login | Status: failure
+  Time: 2026-10-23T09:02:00 | User: alex | IP: 192.0.2.10 | Event: login | Status: failure
+  Time: 2026-10-23T09:03:00 | User: alex | IP: 192.0.2.10 | Event: login | Status: success
+
+ALERT #2
+------------------------------------------------------------
+Username: sam
+Severity: Low
+Finding: 2 failed login attempt(s) were followed by a successful login for user 'sam'.
+Failed attempts: 2
+First failure: 2026-10-23T09:05:00
+Last failure: 2026-10-23T09:07:00
+Successful login: 2026-10-23T09:08:00
+Successful login source IP: 192.0.2.20
+
+Investigation steps:
+  1. Verify whether the successful login was expected by the user.
+  2. Review the source IP address and login time.
+  3. Check whether other accounts had similar failed login activity.
+  4. Confirm the finding with additional authorized log sources.
+
+Assessment note:
+  This alert identifies a pattern for review. It does not confirm that an account was compromised.
+
+Evidence:
+  Time: 2026-10-23T09:05:00 | User: sam | IP: 192.0.2.20 | Event: login | Status: failure
+  Time: 2026-10-23T09:07:00 | User: sam | IP: 192.0.2.20 | Event: login | Status: failure
+  Time: 2026-10-23T09:08:00 | User: sam | IP: 192.0.2.20 | Event: login | Status: success
