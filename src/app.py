@@ -23,7 +23,7 @@ from read_logs import (
 from detect_suspicious import detect_failed_then_success
 from ai_summary import generate_cached_investigation_summary
 from validate_ai_summary import validate_ai_summary
-
+from claim_validation import validate_failed_login_count
 
 # ----------------------------
 # Page configuration
@@ -362,6 +362,55 @@ else:
                     ai_summary,
                     evidence,
                 )
+
+                # ----------------------------
+                # Failed Login Count Validation
+                # ----------------------------
+                st.markdown("#### Failed Login Count Validation")
+
+                count_validation = validate_failed_login_count(
+                    ai_summary,
+                    evidence,
+                )
+
+                if not count_validation.get("checked"):
+                    st.info(
+                        "No supported numeric failed-login count "
+                        "claim was found. Count validation was not performed."
+                    )
+
+                elif count_validation.get("valid"):
+                    st.success(
+                        "Failed login count validation passed. "
+                        f"Evidence contains "
+                        f"{count_validation['expected_count']} failed "
+                        "login attempt(s), matching the AI summary."
+                    )
+
+                else:
+                    st.warning(
+                        "Failed login count mismatch detected! "
+                        f"Evidence shows "
+                        f"{count_validation['expected_count']} failed "
+                        "login attempt(s), but the AI summary reports "
+                        f"{count_validation['reported_counts']}."
+                    )
+
+                with st.expander("View failed login count details"):
+                    st.write(
+                        "**Failed logins found in evidence:**",
+                        count_validation.get("expected_count"),
+                    )
+
+                    st.write(
+                        "**Counts reported by AI:**",
+                        count_validation.get("reported_counts", []),
+                    )
+
+                    st.write(
+                        "**Detected mismatches:**",
+                        count_validation.get("mismatches", []),
+                    )
 
                 if validation_result.get("valid"):
                     st.success(

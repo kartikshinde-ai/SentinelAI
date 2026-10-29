@@ -1,6 +1,13 @@
-"""Evidence validation utilities for SentinelAI AI summaries."""
+"""
+Evidence validation utilities for SentinelAI AI summaries.
 
+These checks identify unsupported IP addresses, timestamps, and usernames.
+They are basic consistency checks, not proof of complete factual correctness.
+"""
+
+import ipaddress
 import re
+from datetime import datetime
 from typing import Any
 
 
@@ -13,15 +20,35 @@ TIMESTAMP_PATTERN = re.compile(
 )
 
 
+def is_valid_ipv4(value: str) -> bool:
+    """Check whether a value is a valid IPv4 address."""
+    try:
+        return isinstance(
+            ipaddress.ip_address(value),
+            ipaddress.IPv4Address,
+        )
+    except ValueError:
+        return False
+
+
+def is_valid_timestamp(value: str) -> bool:
+    """Check whether a timestamp has a valid date and time."""
+    try:
+        datetime.strptime(value, "%Y-%m-%dT%H:%M:%S")
+        return True
+    except ValueError:
+        return False
+
+
 def validate_ai_summary(
     summary: str,
-    evidence: list[dict],
+    evidence: list[dict[str, Any]],
 ) -> dict:
     """
-    Check whether IP addresses and timestamps in an AI summary
-    are supported by the supplied security log evidence.
+    Check IP addresses, timestamps, and explicitly mentioned usernames
+    against supplied evidence.
 
-    This is a basic consistency check, not proof of factual correctness.
+    This function does not verify every natural-language claim.
     """
 
     checked = {
@@ -60,28 +87,58 @@ def validate_ai_summary(
             "unsupported": unsupported,
         }
 
-    evidence_text = " ".join(
-        str(value)
+    # Extract evidence from the relevant fields only.
+    evidence_ips = {
+        str(record["source_ip"]).strip()
         for record in evidence
-        for value in record.values()
-    )
+        if record.get("source_ip") is not None
+    }
 
+    evidence_timestamps = {
+        str(record["timestamp"]).strip()
+        for record in evidence
+        if record.get("timestamp") is not None
+    }
+
+    evidence_usernames = {
+        str(record["username"]).strip()
+        for record in evidence
+        if record.get("username") is not None
+        and str(record["username"]).strip()
+    }
+
+    # Extract IP addresses mentioned in the summary.
     summary_ips = sorted(set(IP_PATTERN.findall(summary)))
-    evidence_ips = set(IP_PATTERN.findall(evidence_text))
 
+    invalid_ips = {
+        ip for ip in summary_ips
+        if not is_valid_ipv4(ip)
+    }
+
+    unsupported_ips = {
+        ip for ip in summary_ips
+        if ip not in evidence_ips or ip in invalid_ips
+    }
+
+    # Extract timestamps mentioned in the summary.
     summary_timestamps = sorted(
         set(TIMESTAMP_PATTERN.findall(summary))
     )
-    evidence_timestamps = set(
-        TIMESTAMP_PATTERN.findall(evidence_text)
-    )
 
-    evidence_usernames = {
-        str(record["username"])
-        for record in evidence
-        if record.get("username") is not None
+    invalid_timestamps = {
+        timestamp
+        for timestamp in summary_timestamps
+        if not is_valid_timestamp(timestamp)
     }
 
+    unsupported_timestamps = {
+        timestamp
+        for timestamp in summary_timestamps
+        if timestamp not in evidence_timestamps
+        or timestamp in invalid_timestamps
+    }
+
+    # Find evidence usernames mentioned as complete words.
     summary_usernames = sorted(
         username
         for username in evidence_usernames
@@ -92,13 +149,22 @@ def validate_ai_summary(
         )
     )
 
-    unsupported_ips = sorted(
-        set(summary_ips) - evidence_ips
+    # Check usernames explicitly introduced as a user, username, or account.
+    username_candidates = set(
+        re.findall(
+            r"""(?i)\b(?:user|username|account)\s+['"]?([a-z0-9_.-]+)""",
+            summary,
+        )
     )
 
-    unsupported_timestamps = sorted(
-        set(summary_timestamps) - evidence_timestamps
-    )
+    unsupported_usernames = {
+        candidate
+        for candidate in username_candidates
+        if not any(
+            candidate.casefold() == known.casefold()
+            for known in evidence_usernames
+        )
+    }
 
     checked = {
         "ip_addresses": summary_ips,
@@ -107,23 +173,33 @@ def validate_ai_summary(
     }
 
     unsupported = {
-        "ip_addresses": unsupported_ips,
-        "timestamps": unsupported_timestamps,
-        "usernames": [],
+        "ip_addresses": sorted(unsupported_ips),
+        "timestamps": sorted(unsupported_timestamps),
+        "usernames": sorted(unsupported_usernames),
     }
 
-    has_unsupported = any(
-        unsupported[key]
-        for key in ("ip_addresses", "timestamps")
-    )
+    errors = []
+
+    if invalid_ips:
+        errors.append("One or more IP addresses have an invalid format.")
+
+    if invalid_timestamps:
+        errors.append("One or more timestamps contain an invalid date or time.")
+
+    if unsupported_ips:
+        errors.append("Some IP addresses are not present in evidence.")
+
+    if unsupported_timestamps:
+        errors.append("Some timestamps are not present in evidence.")
+
+    if unsupported_usernames:
+        errors.append("Some usernames are not present in evidence.")
+
+    valid = not any(unsupported.values())
 
     return {
-        "valid": not has_unsupported,
-        "error": (
-            "Some IP addresses or timestamps are not present in evidence."
-            if has_unsupported
-            else None
-        ),
+        "valid": valid,
+        "error": " ".join(errors) if errors else None,
         "checked": checked,
         "unsupported": unsupported,
     }

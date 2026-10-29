@@ -34,12 +34,9 @@ class TestValidateAISummary(unittest.TestCase):
         result = validate_ai_summary(summary, self.evidence)
 
         self.assertTrue(result["valid"])
-        self.assertEqual(
-            result["unsupported"]["ip_addresses"], []
-        )
-        self.assertEqual(
-            result["unsupported"]["timestamps"], []
-        )
+        self.assertEqual(result["unsupported"]["ip_addresses"], [])
+        self.assertEqual(result["unsupported"]["timestamps"], [])
+        self.assertEqual(result["unsupported"]["usernames"], [])
 
     def test_unsupported_ip(self):
         summary = "The login came from 203.0.113.99."
@@ -52,6 +49,18 @@ class TestValidateAISummary(unittest.TestCase):
             result["unsupported"]["ip_addresses"],
         )
 
+    def test_invalid_ip_format(self):
+        summary = "The login came from 999.999.999.999."
+
+        result = validate_ai_summary(summary, self.evidence)
+
+        self.assertFalse(result["valid"])
+        self.assertIn(
+            "999.999.999.999",
+            result["unsupported"]["ip_addresses"],
+        )
+        self.assertIsNotNone(result["error"])
+
     def test_unsupported_timestamp(self):
         summary = "The event happened at 2026-10-23T10:30:00."
 
@@ -63,14 +72,53 @@ class TestValidateAISummary(unittest.TestCase):
             result["unsupported"]["timestamps"],
         )
 
+    def test_invalid_timestamp_date(self):
+        summary = "The event happened at 2026-13-40T25:61:61."
+
+        result = validate_ai_summary(summary, self.evidence)
+
+        self.assertFalse(result["valid"])
+        self.assertIsNotNone(result["error"])
+
+    def test_unsupported_username(self):
+        summary = (
+            "User kartik logged in from 192.0.2.10 "
+            "at 2026-10-23T09:03:00."
+        )
+
+        result = validate_ai_summary(summary, self.evidence)
+
+        self.assertFalse(result["valid"])
+        self.assertIn(
+            "kartik",
+            result["unsupported"]["usernames"],
+        )
+
+    def test_username_matching_is_case_insensitive(self):
+        summary = "User ALEX logged in from 192.0.2.10."
+
+        result = validate_ai_summary(summary, self.evidence)
+
+        self.assertTrue(result["valid"])
+        self.assertEqual(result["unsupported"]["usernames"], [])
+
     def test_empty_summary(self):
         result = validate_ai_summary("", self.evidence)
 
         self.assertFalse(result["valid"])
         self.assertIsNotNone(result["error"])
 
+    def test_whitespace_summary(self):
+        result = validate_ai_summary("   ", self.evidence)
+
+        self.assertFalse(result["valid"])
+        self.assertIsNotNone(result["error"])
+
     def test_empty_evidence(self):
-        summary = "Login from 203.0.113.99 at 2026-10-23T10:30:00."
+        summary = (
+            "User alex logged in from 203.0.113.99 "
+            "at 2026-10-23T10:30:00."
+        )
 
         result = validate_ai_summary(summary, [])
 
@@ -78,6 +126,10 @@ class TestValidateAISummary(unittest.TestCase):
         self.assertIn(
             "203.0.113.99",
             result["unsupported"]["ip_addresses"],
+        )
+        self.assertIn(
+            "alex",
+            result["unsupported"]["usernames"],
         )
 
     def test_invalid_evidence_type(self):
@@ -94,5 +146,5 @@ class TestValidateAISummary(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    unittest.main(verbosity=2)
 
